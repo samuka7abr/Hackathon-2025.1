@@ -56,3 +56,31 @@ export const defaultTheme = {
     lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
   },
 } as const 
+
+export const darkTheme = {
+  colors: {
+    primary: '#5B7A8F',
+    secondary: '#7B9BA6',
+    background: '#181C1F',
+    white: '#23272A',
+    text: '#F5F7F8',
+    error: '#E57373',
+    success: '#81C784',
+    border: '#23272A',
+    gray: {
+      100: '#23272A',
+      200: '#2C3136',
+      300: '#363B40',
+      400: '#444B52',
+      500: '#5B7A8F',
+      600: '#7B9BA6',
+      700: '#A3B8C2',
+      800: '#C1D1D9',
+      900: '#F5F7F8',
+    },
+  },
+  fonts: defaultTheme.fonts,
+  spacing: defaultTheme.spacing,
+  borderRadius: defaultTheme.borderRadius,
+  shadows: defaultTheme.shadows,
+} as const 

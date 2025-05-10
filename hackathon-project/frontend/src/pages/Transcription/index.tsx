@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { FaMicrophone } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
@@ -89,6 +89,8 @@ export function Transcription() {
   const [time, setTime] = useState('');
   const [transcription, setTranscription] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,8 +99,27 @@ export function Transcription() {
   };
 
   const toggleRecording = () => {
-    setIsRecording(!isRecording);
+    if (!isRecording) {
+      setIsRecording(true);
+      setRecordingTime(0);
+      intervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setIsRecording(false);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
     // TODO: Implementar lógica de gravação
+  };
+
+  // Formatar tempo em mm:ss
+  const formatTime = (seconds: number) => {
+    const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const sec = (seconds % 60).toString().padStart(2, '0');
+    return `${min}:${sec}`;
   };
 
   return (
@@ -143,6 +164,9 @@ export function Transcription() {
           <MicrophoneButton type="button" onClick={toggleRecording}>
             <FaMicrophone />
             {isRecording ? 'Parar Gravação' : 'Iniciar Gravação'}
+            {isRecording && (
+              <span style={{ marginLeft: '0.5rem', fontWeight: 'bold' }}>{formatTime(recordingTime)}</span>
+            )}
           </MicrophoneButton>
         </ButtonGroup>
       </TranscriptionForm>

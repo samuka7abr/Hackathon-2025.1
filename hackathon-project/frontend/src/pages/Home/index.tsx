@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import { AddClientModal } from '../../components/AddClientModal'
 import { EditClientModal } from '../../components/EditClientModal'
 import { ClientHistoryModal } from '../../components/ClientHistoryModal'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 interface Client {
   id: number
@@ -29,18 +31,34 @@ const Container = styled.div`
 `
 
 const Header = styled.header`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 180px 1fr 220px;
   align-items: center;
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+  gap: ${({ theme }) => theme.spacing.md};
+`
+
+const ThemeToggle = styled.button`
+  justify-self: start;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: none;
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 `
 
 const Title = styled.h1`
   color: ${({ theme }) => theme.colors.text};
   font-size: ${({ theme }) => theme.fonts.sizes.xxlarge};
+  text-align: center;
+  margin: 0;
 `
 
 const AddButton = styled.button`
+  justify-self: end;
   background: ${({ theme }) => theme.colors.primary};
   color: ${({ theme }) => theme.colors.white};
   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
@@ -94,13 +112,32 @@ const ClientsList = styled.div`
   overflow: hidden;
 `
 
+const Avatar = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-right: ${({ theme }) => theme.spacing.lg};
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+`
+
 const ClientItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: ${({ theme }) => theme.spacing.lg};
   border-bottom: 1px solid ${({ theme }) => theme.colors.gray[200]};
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  background: ${({ theme }) => theme.colors.white};
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin: 12px 0;
 
   &:last-child {
     border-bottom: none;
@@ -108,14 +145,20 @@ const ClientItem = styled.div`
 
   &:hover {
     background: ${({ theme }) => theme.colors.gray[100]};
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   }
 `
 
 const ClientInfo = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.xs};
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
 `
+
+const ClientText = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
 const ClientName = styled.span`
   font-weight: ${({ theme }) => theme.fonts.weights.semibold};
@@ -162,7 +205,7 @@ const HistoryButton = styled(ActionButton)`
   }
 `
 
-export function Home() {
+export function Home({ showThemeToggle, isDark, toggleTheme }) {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([
     { id: 1, name: 'Maria Silva', age: 28, lastSession: '15/03/2024', phone: '(11) 98765-4321', email: 'maria@email.com' },
@@ -201,6 +244,7 @@ export function Home() {
     setClients([...clients, client])
     setSessions({ ...sessions, [client.id]: [] })
     setIsAddModalOpen(false)
+    toast.success('Paciente adicionado com sucesso!');
   }
 
   const handleEditClient = (client: Client) => {
@@ -213,6 +257,7 @@ export function Home() {
       client.id === editedClient.id ? { ...client, ...editedClient } : client
     ))
     setIsEditModalOpen(false)
+    toast.success('Paciente editado com sucesso!');
   }
 
   const handleDeleteClient = (id: number) => {
@@ -221,6 +266,7 @@ export function Home() {
       const newSessions = { ...sessions }
       delete newSessions[id]
       setSessions(newSessions)
+      toast.success('Paciente removido com sucesso!');
     }
   }
 
@@ -240,6 +286,9 @@ export function Home() {
   return (
     <Container>
       <Header>
+        <ThemeToggle onClick={toggleTheme}>
+          {isDark ? 'Tema Claro' : 'Tema Escuro'}
+        </ThemeToggle>
         <Title>Meus Pacientes</Title>
         <AddButton onClick={() => setIsAddModalOpen(true)}>
           <FiUserPlus />
@@ -267,12 +316,18 @@ export function Home() {
           .map(client => (
             <ClientItem key={client.id}>
               <ClientInfo>
-                <ClientName onClick={() => handleClientClick(client.name)}>
-                  {client.name}
-                </ClientName>
-                <ClientDetails>
-                  {client.age} anos • Última sessão: {client.lastSession}
-                </ClientDetails>
+                <Avatar>{client.name.charAt(0).toUpperCase()}</Avatar>
+                <ClientText>
+                  <ClientName onClick={() => handleClientClick(client.name)}>
+                    {client.name}
+                  </ClientName>
+                  <ClientDetails>
+                    {client.age} anos
+                  </ClientDetails>
+                  <ClientDetails>
+                    Última sessão: {client.lastSession}
+                  </ClientDetails>
+                </ClientText>
               </ClientInfo>
               <ActionButtons>
                 <ActionButton onClick={() => handleEditClient(client)}>
@@ -313,6 +368,8 @@ export function Home() {
           onClose={() => setIsHistoryModalOpen(false)}
         />
       )}
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </Container>
   )
 } 
