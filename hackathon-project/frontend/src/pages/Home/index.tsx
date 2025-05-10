@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 import { FiUserPlus, FiSearch, FiEdit2, FiTrash2, FiClock } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import { AddClientModal } from '../../components/AddClientModal'
 import { EditClientModal } from '../../components/EditClientModal'
 import { ClientHistoryModal } from '../../components/ClientHistoryModal'
@@ -119,6 +120,12 @@ const ClientInfo = styled.div`
 const ClientName = styled.span`
   font-weight: ${({ theme }) => theme.fonts.weights.semibold};
   color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
 `
 
 const ClientDetails = styled.span`
@@ -156,6 +163,7 @@ const HistoryButton = styled(ActionButton)`
 `
 
 export function Home() {
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([
     { id: 1, name: 'Maria Silva', age: 28, lastSession: '15/03/2024', phone: '(11) 98765-4321', email: 'maria@email.com' },
     { id: 2, name: 'João Santos', age: 35, lastSession: '14/03/2024', phone: '(11) 91234-5678', email: 'joao@email.com' },
@@ -192,6 +200,7 @@ export function Home() {
     }
     setClients([...clients, client])
     setSessions({ ...sessions, [client.id]: [] })
+    setIsAddModalOpen(false)
   }
 
   const handleEditClient = (client: Client) => {
@@ -203,6 +212,7 @@ export function Home() {
     setClients(clients.map(client => 
       client.id === editedClient.id ? { ...client, ...editedClient } : client
     ))
+    setIsEditModalOpen(false)
   }
 
   const handleDeleteClient = (id: number) => {
@@ -219,6 +229,10 @@ export function Home() {
     setIsHistoryModalOpen(true)
   }
 
+  const handleClientClick = (clientName: string) => {
+    navigate(`/sessions/${encodeURIComponent(clientName)}`);
+  };
+
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -229,7 +243,7 @@ export function Home() {
         <Title>Meus Pacientes</Title>
         <AddButton onClick={() => setIsAddModalOpen(true)}>
           <FiUserPlus />
-          Novo Paciente
+          Adicionar Paciente
         </AddButton>
       </Header>
 
@@ -237,65 +251,67 @@ export function Home() {
         <SearchIcon>
           <FiSearch />
         </SearchIcon>
-        <SearchInput 
-          placeholder="Buscar pacientes..." 
+        <SearchInput
+          type="text"
+          placeholder="Buscar pacientes..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </SearchContainer>
 
       <ClientsList>
-        {filteredClients.map(client => (
-          <ClientItem key={client.id}>
-            <ClientInfo>
-              <ClientName>{client.name}</ClientName>
-              <ClientDetails>
-                {client.age} anos • Última sessão: {client.lastSession}
-              </ClientDetails>
-            </ClientInfo>
-            <ActionButtons>
-              <HistoryButton 
-                className="history"
-                onClick={() => handleViewHistory(client)}
-              >
-                <FiClock />
-              </HistoryButton>
-              <ActionButton onClick={() => handleEditClient(client)}>
-                <FiEdit2 />
-              </ActionButton>
-              <ActionButton 
-                className="delete" 
-                onClick={() => handleDeleteClient(client.id)}
-              >
-                <FiTrash2 />
-              </ActionButton>
-            </ActionButtons>
-          </ClientItem>
-        ))}
+        {clients
+          .filter(client =>
+            client.name.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+          .map(client => (
+            <ClientItem key={client.id}>
+              <ClientInfo>
+                <ClientName onClick={() => handleClientClick(client.name)}>
+                  {client.name}
+                </ClientName>
+                <ClientDetails>
+                  {client.age} anos • Última sessão: {client.lastSession}
+                </ClientDetails>
+              </ClientInfo>
+              <ActionButtons>
+                <ActionButton onClick={() => handleEditClient(client)}>
+                  <FiEdit2 />
+                </ActionButton>
+                <ActionButton
+                  className="delete"
+                  onClick={() => handleDeleteClient(client.id)}
+                >
+                  <FiTrash2 />
+                </ActionButton>
+              </ActionButtons>
+            </ClientItem>
+          ))}
       </ClientsList>
 
-      <AddClientModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddClient}
-      />
+      {isAddModalOpen && (
+        <AddClientModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddClient}
+        />
+      )}
 
-      {selectedClient && (
-        <>
-          <EditClientModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSave={handleSaveEdit}
-            client={selectedClient}
-          />
+      {isEditModalOpen && selectedClient && (
+        <EditClientModal
+          isOpen={isEditModalOpen}
+          client={selectedClient}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleSaveEdit}
+        />
+      )}
 
-          <ClientHistoryModal
-            isOpen={isHistoryModalOpen}
-            onClose={() => setIsHistoryModalOpen(false)}
-            clientName={selectedClient.name}
-            sessions={sessions[selectedClient.id] || []}
-          />
-        </>
+      {isHistoryModalOpen && selectedClient && (
+        <ClientHistoryModal
+          client={selectedClient}
+          sessions={sessions[selectedClient.id] || []}
+          onClose={() => setIsHistoryModalOpen(false)}
+        />
       )}
     </Container>
   )
