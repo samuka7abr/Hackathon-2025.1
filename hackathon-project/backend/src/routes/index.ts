@@ -4,6 +4,9 @@ import { patientService } from '../mocks/services';
 import { sessionService } from '../mocks/services';
 import multipart from '@fastify/multipart';
 import { minioService } from '../services/minio';
+import { n8nService } from '../services/n8n';
+import axios from 'axios';
+import FormData from 'form-data';
 
 export async function routes(app: FastifyInstance) {
   // Inicializa o MinIO
@@ -33,24 +36,45 @@ export async function routes(app: FastifyInstance) {
       // Faz upload para o MinIO
       const audioUrl = await minioService.uploadAudio(id, data.file, data.filename);
 
-      // Por enquanto, vamos apenas simular uma transcrição
-      const mockTranscription = "Esta é uma transcrição simulada do áudio.";
+      // Baixa o áudio do MinIO
+      const audioBuffer = await minioService.downloadAudio(id, data.filename);
+
+      // Debug: mostrar a chave da OpenAI
+      console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY);
+
+      // Função para transcrever usando OpenAI Whisper
+      async function transcribeWithOpenAI(audioBuffer: Buffer, fileName: string): Promise<string> {
+        const form = new FormData();
+        form.append('file', audioBuffer, fileName);
+        form.append('model', 'whisper-1');
+        const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', form, {
+          headers: {
+            ...form.getHeaders(),
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+        });
+        return response.data.text;
+      }
+
+      // Transcreve usando OpenAI
+      const transcription = await transcribeWithOpenAI(audioBuffer, data.filename);
       
       // Atualiza a sessão com a transcrição e URL do áudio
       const updatedSession = await sessionService.updateSession(Number(id), {
-        transcription: mockTranscription,
+        transcription,
         status: 'completed',
         audioUrl
       });
 
       return updatedSession;
-    } catch (error) {
-      console.error('Erro detalhado:', error);
-      return reply.status(500).send({ 
-        error: 'Erro ao processar o upload',
-        details: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : undefined
-      });
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.status === 429) {
+        return reply.status(429).send({
+          error: 'Limite de requisições atingido na OpenAI',
+          details: 'Você atingiu o limite de uso da API de transcrição. Aguarde alguns minutos e tente novamente ou verifique seu painel da OpenAI.'
+        });
+      }
+      throw err;
     }
   });
 
