@@ -23,6 +23,7 @@ export interface Session {
   date: Date;
   status: 'pending' | 'completed';
   transcription?: string;
+  audioUrl?: string;
   analysis?: {
     SPEC?: {
       S?: string;
