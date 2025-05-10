@@ -167,8 +167,6 @@ Este projeto está sob a licença [MIT](LICENSE).
 
 ---
 
-Desenvolvido com ❤️ para a Hackathon 2025
-
 ## 🎙️ Sistema de Gravação de Áudio
 
 ### Funcionalidades
@@ -176,10 +174,7 @@ Desenvolvido com ❤️ para a Hackathon 2025
 - **Gravação em Tempo Real**
 
   - Interface intuitiva para controle de gravação
-  - Indicadores visuais de nível de áudio
   - Pausa e retomada de gravação
-  - Controle de qualidade do áudio
-  - Suporte a múltiplos dispositivos de entrada
 
 - **Armazenamento e Segurança**
 
