@@ -52,5 +52,18 @@ export const minioService = {
       console.error('Erro ao gerar URL do áudio:', error);
       throw error;
     }
+  },
+
+  async downloadAudio(sessionId: string, fileName: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const objectName = `${sessionId}/${fileName}`;
+      minioClient.getObject(BUCKET_NAME, objectName, (err, dataStream) => {
+        if (err) return reject(err);
+        const chunks: Buffer[] = [];
+        dataStream.on('data', (chunk) => chunks.push(chunk));
+        dataStream.on('end', () => resolve(Buffer.concat(chunks)));
+        dataStream.on('error', reject);
+      });
+    });
   }
 }; 
