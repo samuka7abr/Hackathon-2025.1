@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { FiUserPlus, FiSearch, FiEdit2, FiTrash2, FiClock } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
@@ -207,24 +207,36 @@ const HistoryButton = styled(ActionButton)`
 
 export function Home({ showThemeToggle, isDark, toggleTheme }) {
   const navigate = useNavigate();
-  const [clients, setClients] = useState<Client[]>([
-    { id: 1, name: 'Maria Silva', age: 28, lastSession: '15/03/2024', phone: '(11) 98765-4321', email: 'maria@email.com' },
-    { id: 2, name: 'João Santos', age: 35, lastSession: '14/03/2024', phone: '(11) 91234-5678', email: 'joao@email.com' },
-    { id: 3, name: 'Ana Oliveira', age: 42, lastSession: '13/03/2024', phone: '(11) 99876-5432', email: 'ana@email.com' },
-  ])
-
-  const [sessions, setSessions] = useState<Record<number, Session[]>>({
-    1: [
-      { id: 1, date: '15/03/2024', time: '14:00', notes: 'Paciente relatou melhora significativa nos sintomas de ansiedade.' },
-      { id: 2, date: '08/03/2024', time: '14:00', notes: 'Sessão focada em técnicas de respiração e mindfulness.' },
-    ],
-    2: [
-      { id: 1, date: '14/03/2024', time: '15:30', notes: 'Discussão sobre progressos no tratamento de depressão.' },
-    ],
-    3: [
-      { id: 1, date: '13/03/2024', time: '16:00', notes: 'Primeira sessão de avaliação.' },
-    ],
-  })
+  const [clients, setClients] = useState<Client[]>(() => {
+    const stored = localStorage.getItem('clients');
+    return stored ? JSON.parse(stored) : [
+      { id: 1, name: 'Maria Silva', age: 28, lastSession: '15/03/2024', phone: '(11) 98765-4321', email: 'maria@email.com' },
+      { id: 2, name: 'João Santos', age: 35, lastSession: '14/03/2024', phone: '(11) 91234-5678', email: 'joao@email.com' },
+      { id: 3, name: 'Ana Oliveira', age: 42, lastSession: '13/03/2024', phone: '(11) 99876-5432', email: 'ana@email.com' },
+    ];
+  });
+  const [sessions, setSessions] = useState<Record<number, Session[]>>(() => {
+    const stored = localStorage.getItem('sessions');
+    return stored ? JSON.parse(stored) : {
+      1: [
+        { id: 1, date: '15/03/2024', time: '14:00', notes: 'Paciente relatou melhora significativa nos sintomas de ansiedade.' },
+        { id: 2, date: '08/03/2024', time: '14:00', notes: 'Sessão focada em técnicas de respiração e mindfulness.' },
+      ],
+      2: [
+        { id: 1, date: '14/03/2024', time: '15:30', notes: 'Discussão sobre progressos no tratamento de depressão.' },
+      ],
+      3: [
+        { id: 1, date: '13/03/2024', time: '16:00', notes: 'Primeira sessão de avaliação.' },
+      ],
+    };
+  });
+  // Salvar no localStorage sempre que clients ou sessions mudarem
+  useEffect(() => {
+    localStorage.setItem('clients', JSON.stringify(clients));
+  }, [clients]);
+  useEffect(() => {
+    localStorage.setItem('sessions', JSON.stringify(sessions));
+  }, [sessions]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)

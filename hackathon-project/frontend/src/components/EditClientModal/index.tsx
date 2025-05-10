@@ -113,6 +113,12 @@ const Button = styled.button`
   }
 `
 
+function formatDateBR(dateStr: string) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+}
+
 export function EditClientModal({ isOpen, onClose, onSave, client }: EditClientModalProps) {
   const [name, setName] = useState(client.name)
   const [age, setAge] = useState(client.age.toString())
@@ -136,7 +142,7 @@ export function EditClientModal({ isOpen, onClose, onSave, client }: EditClientM
       id: client.id,
       name,
       age: Number(age),
-      lastSession
+      lastSession: formatDateBR(lastSession)
     })
 
     onClose()

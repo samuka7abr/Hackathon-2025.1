@@ -6,10 +6,16 @@ import { Home } from './pages/Home'
 import { Login } from './pages/Login'
 import { Transcription } from './pages/Transcription'
 import { Sessions } from './pages/Sessions'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem('theme');
+    return stored ? stored === 'dark' : false;
+  });
+  useEffect(() => {
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
