@@ -3,20 +3,17 @@ import { mockUsers } from './users';
 import { mockPatients } from './patients';
 import { mockSessions } from './sessions';
 
-// Serviço de autenticação
-export const authService = {
-  login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
-    const user = mockUsers.find(u => u.email === email && u.password === password);
-    if (!user) {
-      throw new Error('Credenciais inválidas');
-    }
-    return {
-      user,
-      token: 'mock-jwt-token'
-    };
+// Serviço de usuários (psicólogos)
+export const userService = {
+  getUsers: async (): Promise<User[]> => {
+    return mockUsers;
   },
 
-  register: async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> => {
+  getUser: async (id: number): Promise<User | undefined> => {
+    return mockUsers.find(u => u.id === id);
+  },
+
+  createUser: async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> => {
     const newUser = {
       ...userData,
       id: mockUsers.length + 1,
@@ -25,13 +22,34 @@ export const authService = {
     };
     mockUsers.push(newUser);
     return newUser;
+  },
+
+  updateUser: async (id: number, userData: Partial<User>): Promise<User> => {
+    const index = mockUsers.findIndex(u => u.id === id);
+    if (index === -1) {
+      throw new Error('Usuário não encontrado');
+    }
+    mockUsers[index] = {
+      ...mockUsers[index],
+      ...userData,
+      updated_at: new Date()
+    };
+    return mockUsers[index];
+  },
+
+  deleteUser: async (id: number): Promise<void> => {
+    const index = mockUsers.findIndex(u => u.id === id);
+    if (index === -1) {
+      throw new Error('Usuário não encontrado');
+    }
+    mockUsers.splice(index, 1);
   }
 };
 
 // Serviço de pacientes
 export const patientService = {
-  getPatients: async (psychologistId: number): Promise<Patient[]> => {
-    return mockPatients.filter(p => p.psychologist_id === psychologistId);
+  getPatients: async (): Promise<Patient[]> => {
+    return mockPatients;
   },
 
   getPatient: async (id: number): Promise<Patient | undefined> => {
@@ -73,8 +91,8 @@ export const patientService = {
 
 // Serviço de sessões
 export const sessionService = {
-  getSessions: async (patientId: number): Promise<Session[]> => {
-    return mockSessions.filter(s => s.patient_id === patientId);
+  getSessions: async (): Promise<Session[]> => {
+    return mockSessions;
   },
 
   getSession: async (id: number): Promise<Session | undefined> => {

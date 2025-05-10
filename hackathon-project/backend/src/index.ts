@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import dotenv from 'dotenv';
-import connection from './config/database';
+import { routes } from './routes';
 
 // Carrega as variáveis de ambiente
 dotenv.config();
@@ -15,40 +15,22 @@ fastify.register(cors, {
   origin: true
 });
 
-// Rota de teste
-fastify.get('/', async (request, reply) => {
-  return { status: 'API is running' };
-});
+// Registra as rotas
+fastify.register(routes);
 
-// Rota de teste do banco de dados
-fastify.get('/test-db', async (request, reply) => {
-  try {
-    const result = await connection.raw('SELECT NOW()');
-    return { 
-      status: 'Database connection successful',
-      timestamp: result.rows[0].now
-    };
-  } catch (error: any) {
-    fastify.log.error(error);
-    reply.status(500).send({ 
-      error: 'Database connection failed',
-      message: error.message 
-    });
-  }
+// Rota de teste
+fastify.get('/', async () => {
+  return { status: 'API is running' };
 });
 
 const start = async () => {
   try {
-    // Testa a conexão com o banco de dados
-    await connection.raw('SELECT 1');
-    console.log('✅ Database connection successful');
-
     // Inicia o servidor
     await fastify.listen({ 
-      port: Number(process.env.PORT) || 3000,
+      port: Number(process.env.PORT) || 3333,
       host: '0.0.0.0'
     });
-    console.log(`🚀 Server listening on http://localhost:${process.env.PORT || 3000}`);
+    console.log(`🚀 Server listening on http://localhost:${process.env.PORT || 3333}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
